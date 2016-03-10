@@ -17,14 +17,17 @@ class TestTwemRedis(twemredis.TwemRedis):
     """
     def _load_config(self, config_file):
         self._num_shards = 10
-        self._master_name_base = 'tdb'
+        self._shard_name_format = 'tdb{0:03d}'
         self._shards = {}
         self._sentinels = []
         self._canonical_keys = self.compute_canonical_keys()
-        for i in range(0, self.num_shards()):
-            self._shards[i] = mockredis.mock_strict_redis_client()
+        for shard_num in range(0, self.num_shards()):
+            mockShard = mockredis.mock_strict_redis_client()
             # for testing
-            self._shards[i].set('shard_num', i)
+            mockShard.set('shard_num', shard_num)
+            mockShard.set('shard_name',
+                          self._shard_name_format.format(shard_num))
+            self._shards[shard_num] = mockShard
 
 
 class TwemRedisTests(unittest.TestCase):

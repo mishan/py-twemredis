@@ -27,7 +27,7 @@ class TwemRedis:
 
     def _load_config(self, config_file):
         self._config = yaml.load(file(config_file, 'r'))
-        self._master_name_base = self._config['master_name_base']
+        self._shard_name_format = self._config['shard_name_format']
         self._sentinels = self._config['sentinels']
         self._num_shards = int(self._config['num_shards'])
         self._canonical_keys = self.compute_canonical_keys()
@@ -43,7 +43,7 @@ class TwemRedis:
         sentinel_client = Sentinel(
             [(h, 8422) for h in self._sentinels], socket_timeout=1.0)
         for shard_num in range(0, self.num_shards()):
-            shard_name = '{0}{1:03d}'.format(self._master_name_base, shard_num)
+            shard_name = self._shard_name_format.format(shard_num)
             self._shards[shard_num] = sentinel_client.master_for(
                 shard_name, socket_timeout=1.0)
         self._sentinel_client = sentinel_client

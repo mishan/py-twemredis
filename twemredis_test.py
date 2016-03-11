@@ -6,20 +6,23 @@ import unittest
 import twemredis
 import mockredis
 
+shard_name_format = 'tdb{0:03d}'
+test_canonical_keys = [
+    '1', '7', '4', '8', '26', '10', '12', '18', '21', '13',
+]
+num_shards = 10
+
 
 class TestTwemRedis(twemredis.TwemRedis):
-    test_canonical_keys = [
-        '1', '7', '4', '8', '26', '10', '12', '18', '21', '13',
-    ]
     """
     Special TwemRedis sub-class for testing. The _load_config method
     is overriden.
     """
     def _load_config(self, config_file):
-        self._num_shards = 10
-        self._shard_name_format = 'tdb{0:03d}'
+        self._num_shards = num_shards
+        self._shard_name_format = shard_name_format
         self._shards = {}
-        self._sentinels = []
+        self._sentinels = []  # XXX: no mocks for these
         self._canonical_keys = self.compute_canonical_keys()
         for shard_num in range(0, self.num_shards()):
             mockShard = mockredis.mock_strict_redis_client()
@@ -86,6 +89,9 @@ class TwemRedisTests(unittest.TestCase):
         # get the shard number and verify it's what the shard says
         shard_num = self.tr.get_shard_num_by_key('12345')
         self.assertEquals(str(shard_num), shard.get('shard_num'))
+        # verify te shard name is what we're expecting
+        shard_name = shard_name_format.format(shard_num)
+        self.assertEquals(shard_name, shard.get("shard_name"))
 
     def test_compute_canonical_keys(self):
         canonical_keys = self.tr.compute_canonical_keys()
@@ -103,6 +109,8 @@ class TwemRedisTests(unittest.TestCase):
             # the shard we think we're on
             fetched_num = self.tr.get_shard_by_num(shard_num).get('shard_num')
             self.assertEquals(str(shard_num), fetched_num)
+            # check against our expected test canonical key array
+            self.assertEquals(test_canonical_keys[i], canonical_keys[i])
 
     def test_compute_canonical_keys_fails(self):
         # simulate failure to compute enough direct access keys

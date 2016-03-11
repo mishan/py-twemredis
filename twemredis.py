@@ -114,10 +114,8 @@ class TwemRedis:
         Keyword arguments:
         key_id -- the key id (e.g. '12345' or 'anythingcangohere')
 
-        This method is critical in how the Tagged Redis cluster sharding works.
-        We use twemproxy for sharding and replicate the sharding behavior in
-        Java and other stacks that have Sentinel-aware Redis clients and thus
-        do not need to use twemproxy.
+        This method is critical in how the Redis cluster sharding works. We emulate
+        twemproxy's md5 distribution algorithm.
         """
         m = hashlib.md5(str(key_id)).hexdigest()
         # Below is borrowed from

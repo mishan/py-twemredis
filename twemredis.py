@@ -25,14 +25,18 @@ class TwemRedis:
     def __init__(self, config_file):
         self._load_config(config_file)
 
+        self._hash_start = self._hash_tag[0]
+        self._hash_stop = self._hash_tag[1]
+        self._canonical_keys = self.compute_canonical_keys()
+
+        self._init_redis_shards()
+
     def _load_config(self, config_file):
         self._config = yaml.load(file(config_file, 'r'))
         self._shard_name_format = self._config['shard_name_format']
         self._sentinels = self._config['sentinels']
         self._num_shards = int(self._config['num_shards'])
-        self._canonical_keys = self.compute_canonical_keys()
-
-        self._init_redis_shards()
+        self._hash_tag = self._config['hash_tag']
 
     def _init_redis_shards(self):
         """
@@ -64,7 +68,8 @@ class TwemRedis:
         returns a string representing the key
         (e.g.: 'friend_request:{12345}')
         """
-        return "{0}:{{{1}}}".format(key_type,  key_id)
+        return "{0}:{1}{2}{3}".format(key_type, self._hash_start, key_id,
+                                      self._hash_stop)
 
     def get_shard_by_key(self, key):
         """
@@ -178,7 +183,9 @@ class TwemRedis:
         """
         key_id = key
 
-        m = re.search('{([^}]*)}', key)
+        regex = '{0}([^{1}]*){2}'.format(self._hash_start, self._hash_stop,
+                                         self._hash_stop)
+        m = re.search(regex, key)
         if m is not None:
             key_id = m.group(1)
 

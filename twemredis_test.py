@@ -11,6 +11,7 @@ test_canonical_keys = [
     '1', '7', '4', '8', '26', '10', '12', '18', '21', '13',
 ]
 num_shards = 10
+hash_tag = '{}'
 
 
 class TestTwemRedis(twemredis.TwemRedis):
@@ -21,9 +22,11 @@ class TestTwemRedis(twemredis.TwemRedis):
     def _load_config(self, config_file):
         self._num_shards = num_shards
         self._shard_name_format = shard_name_format
+        self._hash_tag = hash_tag
         self._shards = {}
         self._sentinels = []  # XXX: no mocks for these
-        self._canonical_keys = self.compute_canonical_keys()
+
+    def _init_redis_shards(self):
         for shard_num in range(0, self.num_shards()):
             mockShard = mockredis.mock_strict_redis_client()
             # for testing
@@ -31,7 +34,6 @@ class TestTwemRedis(twemredis.TwemRedis):
             mockShard.set('shard_name',
                           self._shard_name_format.format(shard_num))
             self._shards[shard_num] = mockShard
-
 
 class TwemRedisTests(unittest.TestCase):
     def setUp(self):

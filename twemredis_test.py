@@ -35,6 +35,7 @@ class TestTwemRedis(twemredis.TwemRedis):
                           self._shard_name_format.format(shard_num))
             self._shards[shard_num] = mockShard
 
+
 class TwemRedisTests(unittest.TestCase):
     def setUp(self):
         self.tr = TestTwemRedis('test')

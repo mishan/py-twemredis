@@ -18,7 +18,6 @@ class TwemRedis:
     instance. If they are to be used, then the operations must be
     performed on the shards directly.
     """
-    # TODO: Support mget
     disallowed_sharded_operations = ['hscan', 'keys', 'scan', 'sscan', 'zscan']
 
     def __init__(self, config_file):

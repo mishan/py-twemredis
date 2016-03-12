@@ -219,8 +219,11 @@ class TwemRedis:
             if shard_num not in key_map:
                 key_map[shard_num] = []
             key_map[shard_num].append(key)
+
+        # TODO: parallelize
         for shard_num in range(0, self.num_shards()):
-            results[shard_num] = self._shards[shard_num].mget(key_map[shard_num])
+            shard = self.get_shard_by_num(shard_num)
+            results[shard_num] = shard.mget(key_map[shard_num])
         return results
 
     def __getattr__(self, func_name):

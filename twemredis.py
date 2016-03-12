@@ -19,8 +19,7 @@ class TwemRedis:
     performed on the shards directly.
     """
     # TODO: Support mget
-    disallowed_sharded_operations = ['hscan', 'keys', 'mget',
-                                     'scan', 'sscan', 'zscan']
+    disallowed_sharded_operations = ['hscan', 'keys', 'scan', 'sscan', 'zscan']
 
     def __init__(self, config_file):
         self._load_config(config_file)
@@ -211,6 +210,18 @@ class TwemRedis:
                                  search_amplifier))
 
         return canonical_keys
+
+    def mget(self, args):
+        key_map = {}
+        results = {}
+        for key in args:
+            shard_num = self.get_shard_num_by_key(str(key))
+            if shard_num not in key_map:
+                key_map[shard_num] = []
+            key_map[shard_num].append(key)
+        for shard_num in range(0, self.num_shards()):
+            results[shard_num] = self._shards[shard_num].mget(key_map[shard_num])
+        return results
 
     def __getattr__(self, func_name):
         def func(*args):

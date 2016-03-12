@@ -28,12 +28,12 @@ class TestTwemRedis(twemredis.TwemRedis):
 
     def _init_redis_shards(self):
         for shard_num in range(0, self.num_shards()):
-            mockShard = mockredis.mock_strict_redis_client()
+            mock_shard = mockredis.mock_strict_redis_client()
             # for testing
-            mockShard.set('shard_num', shard_num)
-            mockShard.set('shard_name',
+            mock_shard.set('shard_num', shard_num)
+            mock_shard.set('shard_name',
                           self._shard_name_format.format(shard_num))
-            self._shards[shard_num] = mockShard
+            self._shards[shard_num] = mock_shard
 
 
 class TwemRedisTests(unittest.TestCase):

@@ -167,7 +167,7 @@ class TwemRedis:
         Returns a redis.StrictRedis connection or throws an exception.
         """
         if shard_num < 0 or shard_num >= self.num_shards():
-            raise ValueError("requested invalid shard "+str(shard_num))
+            raise ValueError("requested invalid shard {0}".format(shard_num))
         return self._shards[shard_num]
 
     def _get_key_id_from_key(self, key):

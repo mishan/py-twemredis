@@ -74,7 +74,7 @@ class TwemRedis:
         """
         get_shard_by_key returns the Redis shard given a key.
         Keyword arguments:
-        key -- the key (e.g. 'sr:friend_request:1:{12345}')
+        key -- the key (e.g. 'friend_request:{12345}')
 
         If the key contains curly braces as in the example, then portion inside
         the curly braces will be used as the key id. Otherwise, the entire key
@@ -89,7 +89,7 @@ class TwemRedis:
         """
         get_shard_num_by_key returns the Redis shard number givne a key.
         Keyword arguments:
-        key -- the key (e.g. 'sr:friend_request:1:{12345}')
+        key -- the key (e.g. 'friend_request:{12345}')
 
         See get_shard_by_key for more details as this method behaves the same
         way.
@@ -141,7 +141,7 @@ class TwemRedis:
         key_type -- the type of key (e.g. 'canceled')
         key_id -- the key id (e.g. '12345')
 
-        returns the canonical key string (e.g. 'sr:canceled:1:{12}')
+        returns the canonical key string (e.g. 'canceled:{12}')
         """
         return self.get_key(key_type, self.get_canonical_key_id(key_id))
 

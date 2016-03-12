@@ -45,7 +45,7 @@ class TwemRedis:
         sentinel_client = Sentinel(
             [(h, 8422) for h in self._sentinels], socket_timeout=1.0)
         for shard_num in range(0, self.num_shards()):
-            shard_name = self._shard_name_format.format(shard_num)
+            shard_name = self.get_shard_name(shard_num)
             self._shards[shard_num] = sentinel_client.master_for(
                 shard_name, socket_timeout=1.0)
         self._sentinel_client = sentinel_client
@@ -55,6 +55,9 @@ class TwemRedis:
         num_shards returns the number of Redis shards in this cluster.
         """
         return self._num_shards
+
+    def get_shard_name(self, shard_num):
+        return self._shard_name_format.format(shard_num)
 
     def get_key(self, key_type, key_id):
         """

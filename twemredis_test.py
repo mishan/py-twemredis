@@ -16,25 +16,28 @@ hash_tag = '{}'
 
 class TestTwemRedis(twemredis.TwemRedis):
     """
-    Special TwemRedis sub-class for testing. The _load_config method
-    is overriden.
+    Special TwemRedis sub-class for testing. The _load_config and
+    _init_redis_shard methods are overriden.
     """
     def _load_config(self, config_file):
         self._num_shards = num_shards
         self._shard_name_format = shard_name_format
         self._hash_tag = hash_tag
-        self._shards = {}
         self._sentinels = []  # XXX: no mocks for these
 
+    # create mockredis shard instances
     def _init_redis_shards(self):
+        self._shards = {}
         for shard_num in range(0, self.num_shards()):
             mock_shard = mockredis.mock_strict_redis_client()
             # for testing
             mock_shard.set('shard_num', shard_num)
             mock_shard.set('shard_name',
-                          self._shard_name_format.format(shard_num))
+                          self.get_shard_name(shard_num))
             self._shards[shard_num] = mock_shard
 
+# XXX: make a version of above with ability to set the config via yml
+# buffer to test configuration translates properly.
 
 class TwemRedisTests(unittest.TestCase):
     def setUp(self):

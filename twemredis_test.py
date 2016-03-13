@@ -129,4 +129,16 @@ class TwemRedisTests(unittest.TestCase):
         except:
             self.assertTrue(True)
         else:
+            print("ValueError was not raised.")
             self.assertTrue(False)
+
+    def test_get_shard_name(self):
+        for shard_num in range(0, self.tr.num_shards()):
+            expected_shard_name = shard_name_format.format(shard_num)
+            shard_name = self.tr.get_shard_name(shard_num)
+            # verify the shard name is what we expect
+            self.assertEquals(expected_shard_name, shard_name)
+            # verify the shard contains the shard num and name we expect.
+            shard = self.tr.get_shard_by_num(shard_num)
+            self.assertEquals(str(shard_num), shard.get('shard_num'))
+            self.assertEquals(expected_shard_name, shard.get('shard_name'))

@@ -5,13 +5,22 @@ unit tests for twemredis.py
 import unittest
 import twemredis
 import mockredis
+import yaml
 
-shard_name_format = 'tdb{0:03d}'
+test_yaml = """
+sentinels:
+  - sentinel01.example.com
+  - sentinel02.example.com
+  - sentinel03.example.com
+num_shards: 10
+shard_name_format: tdb{0:03d}
+hash_tag: "{}"
+"""
+shard_name_format = 'tdb{0:03d}'  # per above
+# generated for 10 shard config as above
 test_canonical_keys = [
     '1', '7', '4', '8', '26', '10', '12', '18', '21', '13',
 ]
-num_shards = 10
-hash_tag = '{}'
 
 
 class TestTwemRedis(twemredis.TwemRedis):
@@ -19,13 +28,8 @@ class TestTwemRedis(twemredis.TwemRedis):
     Special TwemRedis sub-class for testing. The _load_config and
     _init_redis_shard methods are overriden.
     """
-    # XXX: make this use yml for _load_config so this actually tests
-    # loading the configuration properly.
-    def _load_config(self, config_file):
-        self._num_shards = num_shards
-        self._shard_name_format = shard_name_format
-        self._hash_tag = hash_tag
-        self._sentinels = []  # XXX: no mocks for these
+    def _parse_config(self, config):
+        return yaml.load(config)
 
     # create mockredis shard instances
     def _init_redis_shards(self):
@@ -41,7 +45,7 @@ class TestTwemRedis(twemredis.TwemRedis):
 
 class TwemRedisTests(unittest.TestCase):
     def setUp(self):
-        self.tr = TestTwemRedis('test')
+        self.tr = TestTwemRedis(test_yaml)
 
     def test_config_override(self):
         # Basic check by calling num_shards()
@@ -99,15 +103,15 @@ class TwemRedisTests(unittest.TestCase):
         shard_name = shard_name_format.format(shard_num)
         self.assertEquals(shard_name, shard.get("shard_name"))
 
-    def test_compute_canonical_keys(self):
-        canonical_keys = self.tr.compute_canonical_keys()
+    def test_compute_canonical_key_ids(self):
+        canonical_keys = self.tr.compute_canonical_key_ids()
         for i in range(0, len(canonical_keys)):
             key_id = canonical_keys[i]
             shard_num = self.tr.get_shard_num_by_key_id(key_id)
             # check that this direct access key id's index is the
             # same as the shard's index
             self.assertEquals(i, shard_num)
-            ckey_id = self.tr.get_canonical_key_id_by_shard_num(shard_num)
+            ckey_id = self.tr.get_canonical_key_id_for_shard(shard_num)
             # check that this direct access key id is the same as
             # the canonical key id
             self.assertEquals(str(key_id), ckey_id)

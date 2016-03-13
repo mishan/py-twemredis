@@ -21,20 +21,20 @@ class TwemRedis:
     disallowed_sharded_operations = ['hscan', 'keys', 'scan', 'sscan', 'zscan']
 
     def __init__(self, config_file):
-        self._load_config(config_file)
+        self._config = self._parse_config(config_file)
 
-        self._hash_start = self._hash_tag[0]
-        self._hash_stop = self._hash_tag[1]
-        self._canonical_keys = self.compute_canonical_keys()
-
-        self._init_redis_shards()
-
-    def _load_config(self, config_file):
-        self._config = yaml.load(file(config_file, 'r'))
         self._shard_name_format = self._config['shard_name_format']
         self._sentinels = self._config['sentinels']
         self._num_shards = int(self._config['num_shards'])
         self._hash_tag = self._config['hash_tag']
+        self._hash_start = self._hash_tag[0]
+        self._hash_stop = self._hash_tag[1]
+        self._canonical_keys = self.compute_canonical_key_ids()
+
+        self._init_redis_shards()
+
+    def _parse_config(self, config_file):
+        return yaml.load(file(config_file, 'r'))
 
     def _init_redis_shards(self):
         """
@@ -158,7 +158,7 @@ class TwemRedis:
         """
         return self._canonical_keys[self.get_shard_num_by_key_id(key_id)]
 
-    def get_canonical_key_id_by_shard_num(self, shard_num):
+    def get_canonical_key_id_for_shard(self, shard_num):
         return self._canonical_keys[shard_num]
 
     def get_shard_by_num(self, shard_num):
@@ -192,7 +192,7 @@ class TwemRedis:
 
         return key_id
 
-    def compute_canonical_keys(self, search_amplifier=100):
+    def compute_canonical_key_ids(self, search_amplifier=100):
         canonical_keys = {}
         num_shards = self.num_shards()
         # Guarantees enough to find all keys without running forever

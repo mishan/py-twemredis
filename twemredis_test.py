@@ -33,11 +33,12 @@ class TestTwemRedis(twemredis.TwemRedis):
             # for testing
             mock_shard.set('shard_num', shard_num)
             mock_shard.set('shard_name',
-                          self.get_shard_name(shard_num))
+                           self.get_shard_name(shard_num))
             self._shards[shard_num] = mock_shard
 
 # XXX: make a version of above with ability to set the config via yml
 # buffer to test configuration translates properly.
+
 
 class TwemRedisTests(unittest.TestCase):
     def setUp(self):

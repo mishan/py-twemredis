@@ -19,6 +19,8 @@ class TestTwemRedis(twemredis.TwemRedis):
     Special TwemRedis sub-class for testing. The _load_config and
     _init_redis_shard methods are overriden.
     """
+    # XXX: make this use yml for _load_config so this actually tests
+    # loading the configuration properly.
     def _load_config(self, config_file):
         self._num_shards = num_shards
         self._shard_name_format = shard_name_format
@@ -35,9 +37,6 @@ class TestTwemRedis(twemredis.TwemRedis):
             mock_shard.set('shard_name',
                            self.get_shard_name(shard_num))
             self._shards[shard_num] = mock_shard
-
-# XXX: make a version of above with ability to set the config via yml
-# buffer to test configuration translates properly.
 
 
 class TwemRedisTests(unittest.TestCase):

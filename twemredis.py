@@ -5,6 +5,7 @@ twemproxy/nutcracker sharded Redis library for Python.
 - Talks to the Sentinels to obtain the Redis shards
 """
 
+import collections
 import hashlib
 import re
 import redis
@@ -270,16 +271,14 @@ class TwemRedis:
         This method should be invoked on a TwemRedis instance as if it
         were being invoked directly on a StrictRedis instance.
         """
-        key_map = {}
+        key_map = collections.defaultdict(list)
         results = {}
         for key in args:
             shard_num = self.get_shard_num_by_key(str(key))
-            if shard_num not in key_map:
-                key_map[shard_num] = []
             key_map[shard_num].append(key)
 
         # TODO: parallelize
-        for shard_num in range(0, self.num_shards()):
+        for shard_num in key_map.keys():
             shard = self.get_shard_by_num(shard_num)
             results[shard_num] = shard.mget(key_map[shard_num])
         return results

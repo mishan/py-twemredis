@@ -106,13 +106,16 @@ class TwemRedisTests(unittest.TestCase):
     def test_auto_sharding_keyword_args(self):
         self.tr.zadd('testset', 1, 'foo')
         self.tr.zadd('testset', 2, 'bar')
-        try:
-            self.tr.zrange('testset', 0, -1, withscores=True)
-        except:
-            print("Should not have raised an exception")
-            self.assertTrue(False)
-        else:
-            self.assertTrue(True)
+        results = self.tr.zrange('testset', 0, -1, withscores=True)
+        self.assertEquals(2, len(results))
+        foo = results[0]
+        self.assertEquals(2, len(foo))
+        bar = results[1]
+        self.assertEquals(2, len(bar))
+        self.assertEquals('foo', foo[0])
+        self.assertEquals(1.0, foo[1])
+        self.assertEquals('bar', bar[0])
+        self.assertEquals(2.0, bar[1])
 
     def test_compute_canonical_key_ids(self):
         canonical_keys = self.tr.compute_canonical_key_ids()

@@ -19,7 +19,7 @@ class TwemRedis:
     instance. If they are to be used, then the operations must be
     performed on the shards directly.
     """
-    disallowed_sharded_operations = ['hscan', 'keys', 'scan', 'sscan', 'zscan']
+    disallowed_sharded_operations = ['hscan', 'scan', 'sscan', 'zscan']
 
     def __init__(self, config_file):
         self._config = self._parse_config(config_file)
@@ -269,6 +269,21 @@ class TwemRedis:
                                  search_amplifier))
 
         return canonical_keys
+
+    def keys(self, args):
+        """
+        keys wrapper that queries every shard. This is an expensive
+        operation.
+
+        This method should be invoked on a TwemRedis instance as if it
+        were being invoked directly on a StrictRedis instance.
+        """
+        results = {}
+        # TODO: parallelize
+        for shard_num in range(0, self.num_shards()):
+            shard = self.get_shard_by_num(shard_num)
+            results[shard_num] = shard.keys(args)
+        return results
 
     def mget(self, args):
         """

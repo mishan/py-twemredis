@@ -103,6 +103,17 @@ class TwemRedisTests(unittest.TestCase):
         shard_name = shard_name_format.format(shard_num)
         self.assertEquals(shard_name, shard.get("shard_name"))
 
+    def test_auto_sharding_keyword_args(self):
+        self.tr.zadd('testset', 1, 'foo')
+        self.tr.zadd('testset', 2, 'bar')
+        try:
+            self.tr.zrange('testset', 0, -1, withscores=True)
+        except:
+            print("Should not have raised an exception")
+            self.assertTrue(False)
+        else:
+            self.assertTrue(True)
+
     def test_compute_canonical_key_ids(self):
         canonical_keys = self.tr.compute_canonical_key_ids()
         for i in range(0, len(canonical_keys)):

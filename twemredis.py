@@ -291,11 +291,11 @@ class TwemRedis:
         and are not supported. MGET is supported but is handled in its
         own wrapper method.
         """
-        def func(*args):
+        def func(*args, **kwargs):
             if (func_name in self.disallowed_sharded_operations):
                 raise Exception("Cannot call '%s' on sharded Redis".format(
                     func_name))
             key = args[0]
             shard = self.get_shard_by_key(key)
-            return getattr(shard, func_name)(*args)
+            return getattr(shard, func_name)(*args, **kwargs)
         return func

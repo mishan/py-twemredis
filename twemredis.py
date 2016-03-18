@@ -80,6 +80,13 @@ class TwemRedis:
         """
         return self._shard_name_format.format(shard_num)
 
+    def get_shard_names(self):
+        results = []
+        for shard_num in range(0, self.num_shards()):
+            shard_name = self.get_shard_name(shard_num)
+            results.append(shard_name)
+        return results
+
     def get_key(self, key_type, key_id):
         """
         get_key constructs a key given a key type and a key id.

@@ -156,3 +156,11 @@ class TwemRedisTests(unittest.TestCase):
             shard = self.tr.get_shard_by_num(shard_num)
             self.assertEquals(str(shard_num), shard.get('shard_num'))
             self.assertEquals(expected_shard_name, shard.get('shard_name'))
+
+    def test_keys_all_shards(self):
+        for shard_num in range(0, self.tr.num_shards()):
+            shard = self.tr.get_shard_by_num(shard_num)
+            shard.set('foo'+str(shard_num), 'bar')
+        keys = self.tr.keys('foo*')
+        for shard_num in range(0, self.tr.num_shards()):
+            self.assertTrue('foo'+str(shard_num) in keys[shard_num])

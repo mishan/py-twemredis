@@ -41,7 +41,7 @@ class TwemRedis:
         object representation of the file. This is a convenient method
         to override in unit tests.
         """
-        return yaml.load(file(config_file, 'r'))
+        return yaml.load(open(config_file, 'r'))
 
     def _init_redis_shards(self):
         """
@@ -150,7 +150,7 @@ class TwemRedis:
         emulate twemproxy's md5 distribution algorithm.
         """
         # TODO: support other hash functions?
-        m = hashlib.md5(str(key_id)).hexdigest()
+        m = hashlib.md5(str(key_id).encode('ascii')).hexdigest()
         # Below is borrowed from
         # https://github.com/twitter/twemproxy/blob/master/src/hashkit/nc_md5.c
         val = (int(m[0:2], 16) |

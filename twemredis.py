@@ -81,10 +81,16 @@ class TwemRedis:
         return self._shard_name_format.format(shard_num)
 
     def get_shard_names(self):
+        """
+        get_shard_names returns an array containing the names of the shards
+        in the cluster. This is determined with num_shards and
+        shard_name_format
+        """
         results = []
         for shard_num in range(0, self.num_shards()):
             shard_name = self.get_shard_name(shard_num)
             results.append(shard_name)
+
         return results
 
     def get_key(self, key_type, key_id):
@@ -213,6 +219,7 @@ class TwemRedis:
         """
         if shard_num < 0 or shard_num >= self.num_shards():
             raise ValueError("requested invalid shard# {0}".format(shard_num))
+
         return self._shards[shard_num]
 
     def _get_key_id_from_key(self, key):
@@ -317,6 +324,7 @@ class TwemRedis:
             if (func_name in self.disallowed_sharded_operations):
                 raise Exception("Cannot call '%s' on sharded Redis".format(
                     func_name))
+
             key = args[0]
             shard = self.get_shard_by_key(key)
             return getattr(shard, func_name)(*args, **kwargs)

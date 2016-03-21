@@ -170,3 +170,32 @@ class TwemRedisTests(unittest.TestCase):
         for shard_num in range(0, self.tr.num_shards()):
             self.assertTrue(bytes('foo{0}'.format(shard_num), 'utf8')
                             in keys[shard_num])
+
+    def test_mget(self):
+        input_dict = {
+            'cat': 'meow',
+            'cow': 'moo',
+            'dog': 'bark',
+            'pig': 'oink',
+            'sheep': 'bah',
+        }
+        for key in input_dict.keys():
+            self.tr.set(key, input_dict[key])
+        results = self.tr.mget(input_dict)
+        result_count = 0
+        for result in results.values():
+            result_count += len(result)
+            for value in result:
+                self.assertTrue(value in input_dict.values())
+        self.assertEqual(len(input_dict), result_count)
+
+    def test_mget_all_shards_canonical(self):
+        canonical_keys = []
+        for shard_num in range(0, self.tr.num_shards()):
+            key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
+            key = self.tr.get_canonical_key('canceled', key_id)
+            self.tr.set(key, 'foo')
+            canonical_keys.append(key)
+        results = self.tr.mget(canonical_keys)
+        for shard_num in range(0, self.tr.num_shards()):
+            self.assertEqual('foo', results[shard_num][0])

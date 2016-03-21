@@ -303,7 +303,7 @@ class TwemRedis:
         key_map = collections.defaultdict(list)
         results = {}
         for key in args:
-            shard_num = self.get_shard_num_by_key(str(key))
+            shard_num = self.get_shard_num_by_key(key)
             key_map[shard_num].append(key)
 
         # TODO: parallelize
@@ -311,6 +311,28 @@ class TwemRedis:
             shard = self.get_shard_by_num(shard_num)
             results[shard_num] = shard.mget(key_map[shard_num])
         return results
+
+    def mset(self, args):
+        """
+        mset wrapper that batches keys per shard and execute as few
+        msets as necessary to set the keys in all the shards involved.
+
+        This method should be invoked on a TwemRedis instance as if it
+        were being invoked directly on a StrictRedis instance.
+        """
+        key_map = collections.defaultdict(dict)
+        for key in args.keys():
+            value = args[key]
+            shard_num = self.get_shard_num_by_key(key)
+            key_map[shard_num][key] = value
+
+        # TODO: parallelize
+        for shard_num in key_map.keys():
+            shard = self.get_shard_by_num(shard_num)
+            shard.sget(key_map[shard_num])
+
+        # XXX: return something meaningful
+        return True
 
     def __getattr__(self, func_name):
         """

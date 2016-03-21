@@ -321,6 +321,7 @@ class TwemRedis:
         were being invoked directly on a StrictRedis instance.
         """
         key_map = collections.defaultdict(dict)
+        result_count = 0
         for key in args.keys():
             value = args[key]
             shard_num = self.get_shard_num_by_key(key)
@@ -329,10 +330,9 @@ class TwemRedis:
         # TODO: parallelize
         for shard_num in key_map.keys():
             shard = self.get_shard_by_num(shard_num)
-            shard.mset(key_map[shard_num])
+            result_count += shard.mset(key_map[shard_num])
 
-        # XXX: return something meaningful
-        return True
+        return result_count
 
     def __getattr__(self, func_name):
         """

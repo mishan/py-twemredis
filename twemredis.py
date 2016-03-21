@@ -329,7 +329,7 @@ class TwemRedis:
         # TODO: parallelize
         for shard_num in key_map.keys():
             shard = self.get_shard_by_num(shard_num)
-            shard.sget(key_map[shard_num])
+            shard.mset(key_map[shard_num])
 
         # XXX: return something meaningful
         return True

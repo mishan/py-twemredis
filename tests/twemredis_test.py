@@ -53,29 +53,29 @@ class TwemRedisTests(unittest.TestCase):
         self.assertEqual(10, self.tr.num_shards())
 
     def test_get_key(self):
-        self.assertEqual("friend_request:{123456}",
-                         self.tr.get_key("friend_request", "123456"))
+        self.assertEqual('friend_request:{123456}',
+                         self.tr.get_key('friend_request', '123456'))
         # twemredis should not care if it's a number or a word
-        self.assertEqual("friend_request:{banana}",
-                         self.tr.get_key("friend_request", "banana"))
+        self.assertEqual('friend_request:{banana}',
+                         self.tr.get_key('friend_request', 'banana'))
 
     def test_get_canonical_key(self):
         # obtained this value empirically
-        self.assertEqual(7, self.tr.get_shard_num_by_key_id("123456"))
+        self.assertEqual(7, self.tr.get_shard_num_by_key_id('123456'))
         # '18' is the key at index 7 in our test canonical key array
-        self.assertEqual('18', self.tr.get_canonical_key_id("123456"))
+        self.assertEqual('18', self.tr.get_canonical_key_id('123456'))
         # get_canonical_key should use get the canonical key id above
-        self.assertEqual("canceled:{18}",
-                         self.tr.get_canonical_key("canceled", "123456"))
+        self.assertEqual('shard_state:{18}',
+                         self.tr.get_canonical_key('shard_state', '123456'))
 
     def test_get_canonical_key_string(self):
         # obtained this value empirically
-        self.assertEqual(6, self.tr.get_shard_num_by_key_id("banana"))
+        self.assertEqual(6, self.tr.get_shard_num_by_key_id('banana'))
         # '12' is the key at index 6 in our test canonical key array
-        self.assertEqual('12', self.tr.get_canonical_key_id("banana"))
+        self.assertEqual('12', self.tr.get_canonical_key_id('banana'))
         # get_canonical_key should use get the canonical key id above
-        self.assertEqual("canceled:{12}",
-                         self.tr.get_canonical_key("canceled", "banana"))
+        self.assertEqual('shard_state:{12}',
+                         self.tr.get_canonical_key('shard_state', 'banana'))
 
     def test_get_invalid_shard_raises_error(self):
         try:
@@ -84,7 +84,7 @@ class TwemRedisTests(unittest.TestCase):
         except ValueError:
             self.assertTrue(True)
         else:
-            print("ValueError was not raised.")
+            print('ValueError was not raised.')
             self.assertTrue(False)
 
     def test_auto_sharding_get_set(self):
@@ -104,7 +104,7 @@ class TwemRedisTests(unittest.TestCase):
                          shard.get('shard_num'))
         # verify te shard name is what we're expecting
         shard_name = shard_name_format.format(shard_num)
-        self.assertEqual(bytes(shard_name, 'utf8'), shard.get("shard_name"))
+        self.assertEqual(bytes(shard_name, 'utf8'), shard.get('shard_name'))
 
     def test_auto_sharding_keyword_args(self):
         # create an ordered set (zset)
@@ -151,7 +151,7 @@ class TwemRedisTests(unittest.TestCase):
         except:
             self.assertTrue(True)
         else:
-            print("ValueError was not raised.")
+            print('ValueError was not raised.')
             self.assertTrue(False)
 
     def test_get_shard_name(self):
@@ -225,7 +225,7 @@ class TwemRedisTests(unittest.TestCase):
         # set all the canonical keys by shard
         for shard_num in range(0, self.tr.num_shards()):
             key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
-            key = self.tr.get_canonical_key('canceled', key_id)
+            key = self.tr.get_canonical_key('shard_state', key_id)
             self.tr.set(key, 'foo')
             canonical_keys.append(key)
         # mget all the canonical keys and verify
@@ -235,14 +235,15 @@ class TwemRedisTests(unittest.TestCase):
 
     def test_mset_all_shards_canonical(self):
         canonical_keys = {}
+        # precompute some canonical keys
         for shard_num in range(0, self.tr.num_shards()):
             key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
-            key = self.tr.get_canonical_key('canceled', key_id)
+            key = self.tr.get_canonical_key('shard_state', key_id)
             canonical_keys[key] = 'foo'
         # mset the canonical keys
         self.tr.mset(canonical_keys)
         # get each canonical key by shard and verify
         for shard_num in range(0, self.tr.num_shards()):
             key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
-            key = self.tr.get_canonical_key('canceled', key_id)
+            key = self.tr.get_canonical_key('shard_state', key_id)
             self.assertEqual(b'foo', self.tr.get(key))

@@ -107,14 +107,19 @@ class TwemRedisTests(unittest.TestCase):
         self.assertEqual(bytes(shard_name, 'utf8'), shard.get("shard_name"))
 
     def test_auto_sharding_keyword_args(self):
+        # create an ordered set (zset)
         self.tr.zadd('testset', 1, 'foo')
         self.tr.zadd('testset', 2, 'bar')
+        # get all results back with their scores
         results = self.tr.zrange('testset', 0, -1, withscores=True)
+        # validate we have the correct number of elements in the set
         self.assertEqual(2, len(results))
+        # validate each result is a tuple
         foo = results[0]
         self.assertEqual(2, len(foo))
         bar = results[1]
         self.assertEqual(2, len(bar))
+        # validate the actual results
         self.assertEqual(b'foo', foo[0])
         self.assertEqual(1.0, foo[1])
         self.assertEqual(b'bar', bar[0])
@@ -163,10 +168,13 @@ class TwemRedisTests(unittest.TestCase):
                              shard.get('shard_name'))
 
     def test_keys_all_shards(self):
+        # create a unique key on each shard starting with 'foo'
         for shard_num in range(0, self.tr.num_shards()):
             shard = self.tr.get_shard_by_num(shard_num)
             shard.set('foo'+str(shard_num), 'bar')
+        # fetch all keys begining with 'foo'
         keys = self.tr.keys('foo*')
+        # validate each shard's unique key is returned by keys
         for shard_num in range(0, self.tr.num_shards()):
             self.assertTrue(bytes('foo{0}'.format(shard_num), 'utf8')
                             in keys[shard_num])
@@ -179,14 +187,18 @@ class TwemRedisTests(unittest.TestCase):
             'pig': b'oink',
             'sheep': b'bah',
         }
+        # set all the values individually, assume sharding works.
         for key in input_dict.keys():
             self.tr.set(key, input_dict[key])
+        # perform mget
         results = self.tr.mget(input_dict)
         result_count = 0
+        # validate all the values are what we expect
         for result in results.values():
             result_count += len(result)
             for value in result:
                 self.assertTrue(value in input_dict.values())
+        # sanity check got the right number of results back
         self.assertEqual(len(input_dict), result_count)
 
     def test_mset(self):
@@ -197,12 +209,15 @@ class TwemRedisTests(unittest.TestCase):
             'pig': b'oink',
             'sheep': b'bah',
         }
+        # perform mset
         self.tr.mset(input_dict)
         result_count = 0
+        # validate we can fetch all the keys and their values match
         for key in input_dict.keys():
             value = self.tr.get(key)
             self.assertEqual(input_dict[key], value)
             result_count += 1
+        # sanity check we got the right number of results back
         self.assertEqual(len(input_dict), result_count)
 
     def test_mget_all_shards_canonical(self):

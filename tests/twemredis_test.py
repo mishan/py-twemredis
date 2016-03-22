@@ -189,13 +189,45 @@ class TwemRedisTests(unittest.TestCase):
                 self.assertTrue(value in input_dict.values())
         self.assertEqual(len(input_dict), result_count)
 
+    def test_mset(self):
+        input_dict = {
+            'cat': 'meow',
+            'cow': 'moo',
+            'dog': 'bark',
+            'pig': 'oink',
+            'sheep': 'bah',
+        }
+        self.tr.mset(input_dict)
+        result_count = 0
+        for key in input_dict.keys():
+            value = self.tr.get(key)
+            self.assertEqual(input_dict[key], value)
+            result_count += 1
+        self.assertEqual(len(input_dict), result_count)
+
     def test_mget_all_shards_canonical(self):
         canonical_keys = []
+        # set all the canonical keys by shard
         for shard_num in range(0, self.tr.num_shards()):
             key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
             key = self.tr.get_canonical_key('canceled', key_id)
             self.tr.set(key, 'foo')
             canonical_keys.append(key)
+        # mget all the canonical keys and verify
         results = self.tr.mget(canonical_keys)
         for shard_num in range(0, self.tr.num_shards()):
             self.assertEqual('foo', results[shard_num][0])
+
+    def test_mset_all_shards_canonical(self):
+        canonical_keys = {}
+        for shard_num in range(0, self.tr.num_shards()):
+            key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
+            key = self.tr.get_canonical_key('canceled', key_id)
+            canonical_keys[key] = 'foo'
+        # mset the canonical keys
+        self.tr.mset(canonical_keys)
+        # get each canonical key by shard and verify
+        for shard_num in range(0, self.tr.num_shards()):
+            key_id = self.tr.get_canonical_key_id_for_shard(shard_num)
+            key = self.tr.get_canonical_key('canceled', key_id)
+            self.assertEqual('foo', self.tr.get(key))

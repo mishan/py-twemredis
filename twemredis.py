@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 twemproxy/nutcracker sharded Redis library for Python.
 - Capable of dealing with twemproxy sharded Redis configuration schemes.

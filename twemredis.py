@@ -7,7 +7,7 @@ twemproxy/nutcracker sharded Redis library for Python.
 import collections
 import hashlib
 import re
-import redis
+
 from redis.sentinel import Sentinel
 import yaml
 

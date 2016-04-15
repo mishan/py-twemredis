@@ -271,7 +271,7 @@ class TwemRedis:
         if len(canonical_keys) != num_shards:
             raise ValueError("Failed to compute enough keys. " +
                              "Wanted %d, got %d (search_amp=%d).".format(
-                                 num_shards, len_canonical_keys,
+                                 num_shards, len(canonical_keys),
                                  search_amplifier))
 
         return canonical_keys

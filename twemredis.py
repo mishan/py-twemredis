@@ -7,7 +7,7 @@ twemproxy/nutcracker sharded Redis library for Python.
 import collections
 import hashlib
 import re
-import redis
+
 from redis.sentinel import Sentinel
 import yaml
 
@@ -271,7 +271,7 @@ class TwemRedis:
         if len(canonical_keys) != num_shards:
             raise ValueError("Failed to compute enough keys. " +
                              "Wanted %d, got %d (search_amp=%d).".format(
-                                 num_shards, len_canonical_keys,
+                                 num_shards, len(canonical_keys),
                                  search_amplifier))
 
         return canonical_keys
@@ -341,12 +341,11 @@ class TwemRedis:
         and are not supported. MGET is supported but is handled in its
         own wrapper method.
         """
-        def func(*args, **kwargs):
+        def func(key, *args, **kwargs):
             if (func_name in self.disallowed_sharded_operations):
                 raise Exception("Cannot call '%s' on sharded Redis".format(
                     func_name))
 
-            key = args[0]
             shard = self.get_shard_by_key(key)
-            return getattr(shard, func_name)(*args, **kwargs)
+            return getattr(shard, func_name)(key, *args, **kwargs)
         return func

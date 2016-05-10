@@ -24,12 +24,20 @@ class TwemRedis:
         self._config = self._parse_config(config_file)
 
         self._shard_name_format = self._config['shard_name_format']
-        self._sentinels = self._config['sentinels']
-        self._num_shards = int(self._config['num_shards'])
-        self._hash_tag = self._config['hash_tag']
 
+        self._hash_tag = self._config['hash_tag']
         self._hash_start = self._hash_tag[0]
         self._hash_stop = self._hash_tag[1]
+
+        if 'sentinels' in self._config:
+            self._sentinels = self._config['sentinels']
+            self._num_shards = int(self._config['num_shards'])
+            self._masters = None
+        elif 'masters' in self._config:
+            self._masters = self._config['masters']
+            self._num_shards = len(self._masters)
+            self._sentinels = None
+
         self._canonical_keys = self.compute_canonical_key_ids()
 
         self._init_redis_shards()
@@ -49,6 +57,14 @@ class TwemRedis:
         is a convenient method to override / stub out in unit tests.
         """
         self._shards = {}
+        if self._sentinels is not None:
+            self.init_shards_from_sentinel()
+        elif self._masters is not None:
+            self.init_shards_from_masters()
+        else:
+            raise Exception("You must either specify sentinels or masters")
+
+    def init_shards_from_sentinel(self):
         sentinel_client = Sentinel(
             [(h, 8422) for h in self._sentinels], socket_timeout=1.0)
         # Connect to all the shards with the names specified per
@@ -60,6 +76,13 @@ class TwemRedis:
                 shard_name, socket_timeout=1.0)
         # Just in case we need it later.
         self._sentinel_client = sentinel_client
+
+    def init_shards_from_masters(self):
+        for shard_num in range(0, self.num_shards()):
+            master = self._masters[shard_num]
+            shard_name = self.get_shard_name(shard_num)
+            self._shards[shard_num] = redis.StrictRedis(master['host'],
+                                                        master['port'])
 
     def num_shards(self):
         """

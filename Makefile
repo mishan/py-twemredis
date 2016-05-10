@@ -9,3 +9,6 @@ test:
 
 test3:
 	python3 -m unittest discover tests "*_test.py"
+
+pep8:
+	pep8 *.py tests/*.py

@@ -81,7 +81,6 @@ class TwemRedis:
         for shard_num in range(0, self.num_shards()):
             master = self._masters[shard_num]
             (host, port) = master.split(' ')
-            shard_name = self.get_shard_name(shard_num)
             self._shards[shard_num] = redis.StrictRedis(host, port,
                                                         socket_timeout=2.0)
 

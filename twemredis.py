@@ -73,16 +73,17 @@ class TwemRedis:
         for shard_num in range(0, self.num_shards()):
             shard_name = self.get_shard_name(shard_num)
             self._shards[shard_num] = sentinel_client.master_for(
-                shard_name, socket_timeout=1.0)
+                shard_name, socket_timeout=2.0)
         # Just in case we need it later.
         self._sentinel_client = sentinel_client
 
     def init_shards_from_masters(self):
         for shard_num in range(0, self.num_shards()):
             master = self._masters[shard_num]
+            (host, port) = master.split(' ')
             shard_name = self.get_shard_name(shard_num)
-            self._shards[shard_num] = redis.StrictRedis(master['host'],
-                                                        master['port'])
+            self._shards[shard_num] = redis.StrictRedis(host, port,
+                                                        socket_timeout=2.0)
 
     def num_shards(self):
         """

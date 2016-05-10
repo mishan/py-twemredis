@@ -4,10 +4,10 @@ init:
 init3:
 	pip3 install -r requirements.txt
 
-test:
+test: pep8
 	python -m unittest discover tests "*_test.py"
 
-test3:
+test3: pep8
 	python3 -m unittest discover tests "*_test.py"
 
 pep8:

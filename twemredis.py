@@ -299,6 +299,13 @@ class TwemRedis:
 
         return canonical_keys
 
+    def execute_on_all_shards(self, func):
+        results = {}
+        for shard_num in range(0, self.num_shards()):
+            shard = self.get_shard_by_num(shard_num)
+            results[shard_num] = func(shard)
+        return results
+
     def keys(self, args):
         """
         keys wrapper that queries every shard. This is an expensive

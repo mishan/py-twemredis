@@ -11,13 +11,21 @@ import re
 from redis.sentinel import Sentinel
 import yaml
 
+__all__ = ['TwemRedis']
+
 
 class TwemRedis:
     """
-    These Redis functions cannot be called indirectly on a TwemRedis
-    instance. If they are to be used, then the operations must be
-    performed on the shards directly.
+    A redis wrapper library for using twemproxy sharded Redis.
+    Allows running operations on individual shards or across all shards.
+
+    Attributes:
+        disallowed_sharded_operations:
+            These Redis functions cannot be called indirectly on a TwemRedis
+            instance. If they are to be used, then the operations must be
+            performed on the shards directly.
     """
+
     disallowed_sharded_operations = ['hscan', 'scan', 'sscan', 'zscan']
 
     def __init__(self, config_file):
@@ -278,11 +286,12 @@ class TwemRedis:
     def compute_canonical_key_ids(self, search_amplifier=100):
         """
         A canonical key id is the lowest integer key id that maps to
-        a particular shard. This set depends on the number of shards.
+        a particular shard. The mapping to canonical key ids depends on the
+        number of shards.
 
         Returns a dictionary mapping from shard number to canonical key id.
 
-        This method will throw an exception if it fails to compute all
+        This method will throw an exception if it fails to compute all of
         the canonical key ids.
         """
         canonical_keys = {}

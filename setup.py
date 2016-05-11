@@ -1,10 +1,11 @@
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 
+description = 'Redis wrapper library for using twemproxy sharded Redis'
 setup(
     name='twemredis',
     version='0.1.0',
-    description='Redis wrapper library for using twemproxy sharded Redis',
+    description=description,
     long_description=description,
     url='https://github.com/mishan/twemredis-py',
     author='Misha Nasledov',

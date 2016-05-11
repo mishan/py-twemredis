@@ -385,9 +385,8 @@ class TwemRedis:
         """
         Allow directly calling StrictRedis operations on a TwemRedis
         instance. This will take the key and apply it to the appropriate
-        shard. Certain operations like KEYS require querying all shards
-        and are not supported. MGET is supported but is handled in its
-        own wrapper method.
+        shard. Certain operations like KEYS and MGET are supported but are
+        handled in their own wrapper methods.
         """
         def func(key, *args, **kwargs):
             if (func_name in self.disallowed_sharded_operations):

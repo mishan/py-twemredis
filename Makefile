@@ -12,3 +12,9 @@ test3: pep8
 
 pep8:
 	pep8 *.py tests/*.py
+
+install: test
+	pip install .
+
+install3: test3
+	pip3 install .

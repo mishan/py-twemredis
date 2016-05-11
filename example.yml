@@ -5,3 +5,4 @@ sentinels:
 num_shards: 20
 shard_name_format: sdb{0:03d}
 hash_tag: "{}"
+timeout: 2.0

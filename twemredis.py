@@ -38,6 +38,11 @@ class TwemRedis:
             self._num_shards = len(self._masters)
             self._sentinels = None
 
+        if 'timeout' in self._config:
+            self._timeout = self._config['timeout']
+        else:
+            self._timeout = 2.0
+
         self._canonical_keys = self.compute_canonical_key_ids()
 
         self._init_redis_shards()
@@ -66,14 +71,14 @@ class TwemRedis:
 
     def init_shards_from_sentinel(self):
         sentinel_client = Sentinel(
-            [(h, 8422) for h in self._sentinels], socket_timeout=1.0)
+            [(h, 8422) for h in self._sentinels], socket_timeout=self._timeout)
         # Connect to all the shards with the names specified per
         # shard_name_format. The names are important since it's getting
         # the instances from Redis Sentinel.
         for shard_num in range(0, self.num_shards()):
             shard_name = self.get_shard_name(shard_num)
             self._shards[shard_num] = sentinel_client.master_for(
-                shard_name, socket_timeout=2.0)
+                shard_name, socket_timeout=self._timeout)
         # Just in case we need it later.
         self._sentinel_client = sentinel_client
 
@@ -81,8 +86,9 @@ class TwemRedis:
         for shard_num in range(0, self.num_shards()):
             master = self._masters[shard_num]
             (host, port) = master.split(' ')
-            self._shards[shard_num] = redis.StrictRedis(host, port,
-                                                        socket_timeout=2.0)
+            shard = redis.StrictRedis(host, port,
+                                      socket_timeout=self._timeout)
+            self._shards[shard_num] = shard
 
     def num_shards(self):
         """
@@ -299,11 +305,23 @@ class TwemRedis:
 
         return canonical_keys
 
-    def execute_on_all_shards(self, func):
+    def execute_on_all_shards(self, closure):
         results = {}
         for shard_num in range(0, self.num_shards()):
             shard = self.get_shard_by_num(shard_num)
-            results[shard_num] = func(shard)
+            results[shard_num] = closure(shard)
+        return results
+
+    def run_on_all_shards(self, func, *args, **kwargs):
+        results = {}
+        for shard_num in range(0, self.num_shards()):
+            shard = self.get_shard_by_num(shard_num)
+            method = getattr(shard, func)
+            if method is not None:
+                results[shard_num] = getattr(shard, func)(*args, **kwargs)
+            else:
+                raise Exception("undefined method '%s' on shard %d".format(
+                    method, shard_num))
         return results
 
     def keys(self, args):
